@@ -85,7 +85,7 @@ export function loadLibrary(env = process.env) {
 /** The closest example to `request`, as { example, score }, or null when none reaches `min`. BM25 (k1 1.2, b 0.75). */
 // A request to make something: only those get an example (a summary, a chart of a file or a question about a
 // law is not an app request, and an example of building one would only distract).
-export const MAKES = /\b(?:make|makes|making|build|builds|building|create|code|program|design|develop|put together|set up|need|want)\b[^.?!]{0,80}\b(?:app|apps|application|page|site|website|game|tool|tracker|calculator|converter|timer|stopwatch|form|sheet|list|quiz|flashcards?|generator|dashboard|planner|scaler|splitter|counter|countdown|board|widget|program)\b|\b(?:app|game|tracker|calculator|converter|timer|stopwatch|quiz|generator)\b/i
+export const MAKES = /\b(?:make|makes|making|build|builds|building|create|code|program|design|develop|put together|set up|need|want)\b[^.?!]{0,80}\b(?:app|apps|application|page|site|website|game|tool|tracker|calculator|converter|timer|stopwatch|form|sheet|spreadsheet|list|quiz|flashcards?|generator|dashboard|planner|scaler|splitter|counter|countdown|board|widget|program)\b|\b(?:app|game|tracker|calculator|converter|timer|stopwatch|quiz|generator)\b/i
 
 export function closest(request, library, min = MIN_SCORE) {
   if (!MAKES.test(String(request ?? ''))) return null

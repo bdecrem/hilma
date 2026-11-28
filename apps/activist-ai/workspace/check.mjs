@@ -619,16 +619,16 @@ print("planted")
     {
       const page = String.raw`
 import json, subprocess
-open("/tmp/p.html", "w").write('<!doctype html><meta name=viewport content="width=device-width"><title>t</title><h1>Members</h1><p>Text</p><img src="https://example.test/x.png">')
+open("/tmp/p.html", "w").write('<!doctype html><meta name=viewport content="width=device-width"><title>t</title><h1>Members</h1><p>Text</p><img src="https://example.test/x.png"><input style="font-size:14px"><input style="font-size:16px"><input type="checkbox">')
 out = {}
 for w in (390, 1280):
     r = subprocess.run(["ola-page", "/tmp/p.html", "--width", str(w), "--out", "/tmp/p-%d.png" % w, "--json", "/tmp/p-%d.json" % w], capture_output=True, text=True, timeout=120)
     j = json.load(open("/tmp/p-%d.json" % w)) if r.returncode == 0 else {}
-    out[w] = {"code": r.returncode, "size": j.get("shot_size"), "outside": j.get("outside_requests"), "broken": j.get("broken_images")}
+    out[w] = {"code": r.returncode, "size": j.get("shot_size"), "outside": j.get("outside_requests"), "broken": j.get("broken_images"), "zoom": j.get("zoom_fields_count")}
 print(json.dumps(out))
 `
       const r = insideJSON(A, page, { timeout: 240_000 })
-      t('ola-page: renders a page at 390 and 1280 px inside the VM, and reports the request to another address it could not make', r['390']?.code === 0 && r['390'].size?.[0] === 390 && r['1280']?.size?.[0] === 1280 && r['390'].outside?.length === 1 && r['390'].broken?.length === 1, JSON.stringify(r).slice(0, 240))
+      t('ola-page: renders a page at 390 and 1280 px inside the VM, reports the request to another address it could not make, and the one field whose 14 px text makes an iPhone zoom (OLA-466)', r['390']?.code === 0 && r['390'].size?.[0] === 390 && r['1280']?.size?.[0] === 1280 && r['390'].outside?.length === 1 && r['390'].broken?.length === 1 && r['390'].zoom === 1, JSON.stringify(r).slice(0, 240))
     }
     // ola-page --do (OLA-174): the agent tries its own page before saying it works: fill, click, the words after
     {

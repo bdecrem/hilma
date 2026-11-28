@@ -44,6 +44,9 @@ test('the neighbors are of the same kind', () => {
     'make a simple memory game where you flip tiles to find matching pairs': 'test-tic-tac-toe',
     'make a unit converter for distance, weight and temperature': 'test-recipe-scaler',
     'build me a to-do app where each task has a due date': 'test-reading-list',
+    // OLA-466: Bart's spreadsheet, in his words and in the checker's
+    [seven.find((r) => /tiny spreadsheet/.test(r))]: 'test-budget-grid',
+    'make me a spreadsheet, 10 columns by 20 rows, where cells can hold numbers, text or formulas like =A1+B1 and =SUM(A1:A5)': 'test-budget-grid',
   }
   for (const [r, id] of Object.entries(want)) assert.equal(closest(r, lib)?.example.id, id, r)
 })

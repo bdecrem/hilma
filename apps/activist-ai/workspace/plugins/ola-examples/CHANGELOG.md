@@ -1,5 +1,9 @@
 # ola-examples
 
+## 1.4.0 (2026-11-27, OLA-466)
+
+A ninth example, test-budget-grid: an editable grid of cells with formulas, the neighbor of Bart's spreadsheet (which kept showing a formula's text after Enter, added to a cell's old text when typed on, and zoomed on every tap on an iPhone). Its lines say how a spreadsheet behaves: typing on a selected cell replaces it, a finished cell shows its value, 16 px cell text, the spreadsheet error words, no test values left in. "spreadsheet" now counts as a thing to make ("make me a spreadsheet" matched nothing before).
+
 ## 1.3.0 (2026-11-27, OLA-497)
 
 The note no longer shows how each thing was tried: it says to build in one go as AGENTS.md says and hand it over without a look. The library's examples are rewritten to that fast path (one .html file where it can; a part that computes in its own .js with its cases run once by ola-test; no designer skill). The speed check (evals/speed) measured Ola writing kite.html, kite.css and kite.js and looking at the page where plain OpenCode wrote one file.
