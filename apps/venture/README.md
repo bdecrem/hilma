@@ -116,16 +116,21 @@ writes the `ended` marker, so `transcript.mjs --wait talk` returns at once.
 **Local voice (OLA-529, 2026-11-27).** A switch under the button, off by default and remembered
 on the device, swaps the ears and the mouth for Kit's voice server on the Mac Studio
 (`apps/venture/voice-local/`: Silero VAD ends a turn after 800 ms of quiet, Parakeet writes it
-down, Kokoro `af_heart` reads each sentence). The browser reaches it over Tailscale at
-`wss://ola-studio.tailde799a.ts.net:8443` (`tailscale serve`, tailnet only), with a six-hour token
-the session route signs from `KIT_VOICE_SECRET` (Vercel; the Studio's copy is
-`~/.kit-voice-secret`). `src/app/venture/local-voice.ts` speaks the same events as the Realtime
-data channel, so Talk.tsx's turn-taking is shared; Claude's replies are unchanged. An unreachable
-Studio is an error on the page, never a silent switch to the paid voice. Install or update with
-`apps/venture/voice-local/install.sh` (launchd `cx.kit.voice` of user `ola`, log
-`~/Library/Logs/kit-voice/voice.log`, counts and timings only), stop with `install.sh stop`.
-Check: `VENTURE_KEY=<key> node scripts/venture/talk-local-check.mjs <dir> [base]` from a machine
-on the tailnet.
+down, Kokoro `af_heart` reads each sentence). The browser reaches it at
+`https://kit-voice.tunn3l.sh` (Bart: "make it work over a tunn3l url", so the phone needs no
+Tailscale): plain HTTP, because a tunn3l tunnel carries only whole requests and answers. The
+microphone goes up in 256 ms posts whose answers carry the events since the last one (speech
+started, stopped, the transcript); each sentence of a reply is one post answered with its audio.
+Every route but `/health` needs a six-hour token the session route signs from `KIT_VOICE_SECRET`
+(Vercel; the Studio's copy is `~/.kit-voice-secret`), in the query string so no request needs a
+preflight; the tunnel has no password page. `src/app/venture/local-voice.ts` speaks the same events
+as the Realtime data channel, so Talk.tsx's turn-taking is shared; Claude's replies are unchanged.
+An unreachable Studio is an error on the page, never a silent switch to the paid voice. Install or
+update with `apps/venture/voice-local/install.sh` (launchd `cx.kit.voice` and
+`sh.tunn3l.kit-voice` of user `ola`, voice log `~/Library/Logs/kit-voice/voice.log`, counts and
+timings only), stop with `install.sh stop`. The tunnel's own log prints a claim link that holds
+the tunn3l account key: do not print it. Check:
+`VENTURE_KEY=<key> node scripts/venture/talk-local-check.mjs <dir> [base]`.
 
 The check plays one spoken comment through a fake microphone, then (on a dev
 server, through `window.__talk`) compares what the voice said with what it was

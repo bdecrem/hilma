@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // One headless call on the talk page with the "Local voice" switch on (OLA-529): the ears and
-// the mouth are Kit's voice server on the Mac Studio (apps/venture/voice-local/), reached over
-// Tailscale, so this machine must be on the tailnet. A fake microphone plays one spoken
+// the mouth are Kit's voice server on the Mac Studio (apps/venture/voice-local/), reached at its
+// tunn3l address (no Tailscale needed). A fake microphone plays one spoken
 // question (macOS `say`, written to a file, nothing played aloud). Checks that the question is
 // transcribed, Claude's reply arrives and is spoken, and prints the delay from the end of the
 // question to the first sound of the reply. The session is marked "test".

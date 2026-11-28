@@ -1,34 +1,39 @@
 """Kit's local voice (OLA-529): the ears and the mouth of a talk-page call, on the Mac Studio.
 
-One WebSocket per call, behind `tailscale serve` (https on the tailnet only):
-  browser -> server   binary: the microphone, 16 kHz mono int16 PCM
-                      {"type":"speak","id":<int>,"text":"..."}   read this aloud (Kokoro af_heart)
-                      {"type":"cancel"}                          stop every reading in progress
-  server -> browser   {"type":"ready"}
-                      {"type":"speech_started"} / {"type":"speech_stopped"}   (Silero VAD)
-                      {"type":"transcript","text":"..."}         his whole turn (Parakeet)
-                      binary: 4-byte little-endian id, then 24 kHz mono int16 PCM (one sentence)
-                      {"type":"speak_done","id":<int>}
-GET /health answers {"ok":true}. Every call carries ?t=<token>: "<expiry>.<hex hmac-sha256(secret,
-'kit-voice:'+expiry)>", minted by the Vercel talk session route from the same secret.
+Plain HTTP, one whole request and one whole answer each, so it passes through a tunn3l tunnel
+(https://kit-voice.tunn3l.sh, which buffers both and carries no WebSockets):
+  POST /call?t=TOKEN                 -> {"call": id, "end_silence_ms": 800}
+  POST /call/<id>/audio?t=TOKEN      body: the microphone, ~250 ms of 16 kHz mono int16 PCM
+                                     -> {"events": [...]} everything since the last answer:
+                                        {"type":"speech_started"} / {"type":"speech_stopped"} (Silero VAD)
+                                        {"type":"transcript","text":"..."} his whole turn (Parakeet)
+  POST /call/<id>/speak?t=TOKEN      body: one sentence (text/plain)
+                                     -> 24 kHz mono int16 PCM of it (Kokoro af_heart)
+  POST /call/<id>/end?t=TOKEN        -> {"ok": true}
+  GET  /health                       -> {"ok": true}  (no token, says nothing else)
+TOKEN is "<expiry>.<hex hmac-sha256(secret, 'kit-voice:'+expiry)>", minted by the Vercel talk
+session route from the same secret; it sits in the query string so the browser's fetches are
+"simple" requests (no preflight). Every route but /health refuses a missing, wrong or expired
+token. A call with no request for IDLE_S is dropped.
 
-The end of a turn is END_SILENCE_MS of silence after at least MIN_SPEECH_MS of speech; talking
+The end of a turn is END_SILENCE_MS of quiet after at least MIN_SPEECH_MS of speech; talking
 again inside that pause keeps the same turn. Logs carry counts and timings only, never words,
 and no audio is written anywhere.
 
 Run: KIT_VOICE_SECRET_FILE=~/.kit-voice-secret ~/voice-trial/.venv/bin/python server.py
 """
 
-import asyncio
 import hashlib
 import hmac
 import json
 import os
-import struct
+import re
+import secrets
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 import numpy as np
@@ -45,7 +50,9 @@ END_SILENCE_MS = 800  # the one constant: this much quiet ends his turn
 MIN_SPEECH_MS = 160  # shorter than this is a click, not a word
 PREROLL_MS = 320  # audio kept from just before speech began
 MAX_TURN_S = 90
+IDLE_S = 60
 ON, OFF = 0.5, 0.35  # Silero speech probability: start, and stay-in-speech thresholds
+ORIGINS = re.compile(r"^(https://ola\.cx|https://www\.ola\.cx|http://localhost(:\d+)?)$")
 
 
 def log(*a):
@@ -81,6 +88,7 @@ models = {}
 
 def load_models():
     import mlx.core as mx
+    import torch
     from mlx_audio.tts.utils import load_model
     from parakeet_mlx import from_pretrained
     from parakeet_mlx.audio import get_logmel
@@ -90,8 +98,9 @@ def load_models():
     models["tts"] = load_model("mlx-community/Kokoro-82M-bf16")
     # get_logmel is lru_cached in parakeet-mlx: calling it directly would keep every turn's audio.
     models["mx"], models["logmel"] = mx, getattr(get_logmel, "__wrapped__", get_logmel)
-    # Warm both once so the first call is not slow.
-    list(models["tts"].generate(text="Ready.", voice=VOICE, lang_code="a"))
+    models["torch"] = torch
+    torch.set_num_threads(1)
+    speak("Ready.")
     transcribe(np.zeros(SR_IN, dtype=np.float32))
     log(f"models loaded in {time.time() - t:.1f}s")
 
@@ -102,52 +111,46 @@ def transcribe(audio: np.ndarray) -> str:
     return m.generate(mel)[0].text.strip()
 
 
-def speak(text: str, on_audio, cancelled) -> int:
-    n = 0
+def speak(text: str) -> bytes:
+    parts = []
     for r in models["tts"].generate(text=text, voice=VOICE, lang_code="a", split_pattern=r"(?<=[.!?])\s+"):
-        if cancelled():
-            break
-        a = np.clip(np.array(r.audio).reshape(-1), -1, 1)
-        on_audio((a * 32767).astype("<i2").tobytes())
-        n += a.size
-    return n
+        parts.append(np.clip(np.array(r.audio).reshape(-1), -1, 1))
+    a = np.concatenate(parts) if parts else np.zeros(0, dtype=np.float32)
+    return (a * 32767).astype("<i2").tobytes()
 
 
 class Call:
-    def __init__(self, ws):
-        import torch
-
-        self.ws = ws
-        self.vad = torch.jit.load(VAD_PATH)
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.vad = models["torch"].jit.load(VAD_PATH)
         self.vad.reset_states()
-        self.torch = torch
         self.pending = np.zeros(0, dtype=np.float32)
         self.preroll = []
         self.turn = None  # frames of the turn in progress
         self.voiced_ms = 0.0
         self.quiet_ms = 0.0
-        self.epoch = 0  # bumped by cancel: readings of an older epoch stop
-        self.loop = asyncio.get_running_loop()
+        self.events = []
+        self.seen = time.time()
 
-    def send(self, obj):
-        return self.ws.send(json.dumps(obj))
+    def audio(self, data: bytes) -> list:
+        with self.lock:
+            x = np.frombuffer(data[: len(data) // 2 * 2], dtype="<i2").astype(np.float32) / 32768
+            self.pending = np.concatenate([self.pending, x])
+            while self.pending.size >= FRAME:
+                f, self.pending = self.pending[:FRAME], self.pending[FRAME:]
+                self.frame(f)
+            out, self.events = self.events, []
+            return out
 
-    async def on_audio(self, data: bytes):
-        x = np.frombuffer(data, dtype="<i2").astype(np.float32) / 32768
-        self.pending = np.concatenate([self.pending, x])
-        while self.pending.size >= FRAME:
-            f, self.pending = self.pending[:FRAME], self.pending[FRAME:]
-            await self.on_frame(f)
-
-    async def on_frame(self, f):
-        p = self.vad(self.torch.from_numpy(f), SR_IN).item()
+    def frame(self, f):
+        p = self.vad(models["torch"].from_numpy(f.copy()), SR_IN).item()
         if self.turn is None:
             self.preroll.append(f)
             self.preroll = self.preroll[-int(PREROLL_MS / FRAME_MS) :]
             self.voiced_ms = self.voiced_ms + FRAME_MS if p >= ON else 0.0
             if self.voiced_ms >= MIN_SPEECH_MS:
                 self.turn, self.preroll, self.quiet_ms = list(self.preroll), [], 0.0
-                await self.send({"type": "speech_started"})
+                self.events.append({"type": "speech_started"})
             return
         self.turn.append(f)
         self.quiet_ms = self.quiet_ms + FRAME_MS if p < OFF else 0.0
@@ -155,79 +158,113 @@ class Call:
             keep = len(self.turn) - max(int((self.quiet_ms - 200) / FRAME_MS), 0)
             audio = np.concatenate(self.turn[:keep])
             self.turn, self.voiced_ms = None, 0.0
-            await self.send({"type": "speech_stopped"})
-            # One MLX thread keeps the transcripts in order; the VAD goes on meanwhile.
-            asyncio.create_task(self.hear(audio))
+            self.events.append({"type": "speech_stopped"})
+            # One MLX thread keeps the transcripts in order; the next poll carries the words.
+            mlx.submit(self.hear, audio)
 
-    async def hear(self, audio):
+    def hear(self, audio):
         t = time.time()
         try:
-            text = await self.loop.run_in_executor(mlx, transcribe, audio)
+            text = transcribe(audio)
         except Exception as e:
             log("listen failed:", type(e).__name__)
             text = ""
         log(f"heard {audio.size / SR_IN:.1f}s in {time.time() - t:.2f}s, {len(text.split())} words")
-        await self.send({"type": "transcript", "text": text})
-
-    async def on_speak(self, rid: int, text: str):
-        epoch = self.epoch
-        head = struct.pack("<I", rid)
-        t = time.time()
-
-        def out(pcm: bytes):
-            asyncio.run_coroutine_threadsafe(self.ws.send(head + pcm), self.loop)
-
-        n = await self.loop.run_in_executor(mlx, speak, text, out, lambda: self.epoch != epoch)
-        log(f"spoke {n / 24000:.1f}s in {time.time() - t:.2f}s{' (cut)' if self.epoch != epoch else ''}")
-        await self.send({"type": "speak_done", "id": rid})
+        with self.lock:
+            self.events.append({"type": "transcript", "text": text})
 
 
-async def handler(ws):
-    call = Call(ws)
-    log("call opened")
-    await call.send({"type": "ready", "end_silence_ms": END_SILENCE_MS})
-    tasks = set()
-    try:
-        async for msg in ws:
-            if isinstance(msg, bytes):
-                await call.on_audio(msg)
-                continue
-            m = json.loads(msg)
-            if m.get("type") == "speak" and isinstance(m.get("text"), str):
-                task = asyncio.create_task(call.on_speak(int(m.get("id", 0)), m["text"][:4000]))
-                tasks.add(task)
-                task.add_done_callback(tasks.discard)
-            elif m.get("type") == "cancel":
-                call.epoch += 1
-    except Exception as e:
-        log("call error:", type(e).__name__)
-    finally:
-        call.epoch += 1
+calls: dict[str, Call] = {}
+calls_lock = threading.Lock()
+
+
+def reaper():
+    while True:
+        time.sleep(10)
+        with calls_lock:
+            for cid in [c for c, v in calls.items() if time.time() - v.seen > IDLE_S]:
+                del calls[cid]
+                log("call expired")
+
+
+class Handler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def log_message(self, *a):  # no paths, no tokens in the log
+        pass
+
+    def cors(self):
+        o = self.headers.get("Origin", "")
+        if ORIGINS.match(o):
+            self.send_header("Access-Control-Allow-Origin", o)
+            self.send_header("Vary", "Origin")
+
+    def answer(self, code: int, body: bytes, ctype="application/json"):
+        self.send_response(code)
+        self.cors()
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def json(self, code: int, obj):
+        self.answer(code, (json.dumps(obj) + "\n").encode())
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.cors()
+        self.send_header("Access-Control-Allow-Methods", "GET, POST")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def do_GET(self):
+        if urlparse(self.path).path == "/health":
+            return self.json(200, {"ok": bool(models)})
+        self.json(404, {"error": "not found"})
+
+    def do_POST(self):
+        u = urlparse(self.path)
+        n = int(self.headers.get("Content-Length") or 0)
+        body = self.rfile.read(min(n, 4 * 2**20)) if n else b""
+        if not token_ok(parse_qs(u.query).get("t", [""])[0]):
+            return self.json(401, {"error": "no"})
+        if u.path == "/call":
+            cid = secrets.token_urlsafe(18)
+            with calls_lock:
+                calls[cid] = Call()
+            log("call opened")
+            return self.json(200, {"call": cid, "end_silence_ms": END_SILENCE_MS})
+        m = re.fullmatch(r"/call/([\w-]{20,40})/(audio|speak|end)", u.path)
+        call = calls.get(m.group(1)) if m else None
+        if not call:
+            return self.json(404, {"error": "no such call"})
+        call.seen = time.time()
+        what = m.group(2)
+        if what == "audio":
+            return self.json(200, {"events": call.audio(body)})
+        if what == "speak":
+            text = body.decode("utf-8", "replace")[:4000].strip()
+            t = time.time()
+            pcm = mlx.submit(speak, text).result() if text else b""
+            log(f"spoke {len(pcm) / 48000:.1f}s in {time.time() - t:.2f}s")
+            return self.answer(200, pcm, "application/octet-stream")
+        with calls_lock:
+            calls.pop(m.group(1), None)
         log("call closed")
+        return self.json(200, {"ok": True})
 
 
-def process_request(connection, request):
-    u = urlparse(request.path)
-    if not token_ok(parse_qs(u.query).get("t", [""])[0]):
-        return connection.respond(HTTPStatus.UNAUTHORIZED, "no\n")
-    if u.path == "/health":
-        r = connection.respond(HTTPStatus.OK, json.dumps({"ok": bool(models), "voice": VOICE}) + "\n")
-        r.headers["Content-Type"] = "application/json"
-        r.headers["Access-Control-Allow-Origin"] = "*"
-        return r
-    if u.path != "/ws":
-        return connection.respond(HTTPStatus.NOT_FOUND, "no\n")
-    return None
-
-
-async def main():
-    from websockets.asyncio.server import serve
-
-    await asyncio.get_running_loop().run_in_executor(mlx, load_models)
-    async with serve(handler, HOST, PORT, process_request=process_request, max_size=2**22, ping_interval=20):
-        log(f"listening on {HOST}:{PORT}")
-        await asyncio.Future()
+def main():
+    mlx.submit(load_models).result()  # on the MLX thread, where every later call runs
+    threading.Thread(target=reaper, daemon=True).start()
+    srv = ThreadingHTTPServer((HOST, PORT), Handler)
+    srv.daemon_threads = True
+    log(f"listening on {HOST}:{PORT}")
+    srv.serve_forever()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

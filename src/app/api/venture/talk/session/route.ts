@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 30
 
 // Local voice (OLA-529): the ears and the mouth are Kit's voice server on the Mac Studio, reached
-// over Tailscale at KIT_VOICE_URL. The browser gets a token good for six hours, signed with
+// through its tunn3l address in KIT_VOICE_URL (https://kit-voice.tunn3l.sh). The browser gets a token good for six hours, signed with
 // KIT_VOICE_SECRET (apps/venture/voice-local/server.py checks it); the secret never leaves here.
 function localVoice(): { url: string; token: string } | null {
   const url = process.env.KIT_VOICE_URL?.trim()

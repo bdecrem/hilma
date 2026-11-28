@@ -1,12 +1,15 @@
 // Local voice (OLA-529): the talk page's ears and mouth on Kit's voice server on the Mac Studio
-// (apps/venture/voice-local/server.py), reached over Tailscale. It stands in for the Realtime
-// data channel: Talk.tsx sends it the same three events it sends OpenAI (response.create with the
-// text in <line> tags, response.cancel, output_audio_buffer.clear) and gets back the same events
-// it reads from OpenAI (speech started/stopped, the transcript, the reply's audio started,
-// done, stopped). So the turn-taking logic is one piece of code for both voices.
+// (apps/venture/voice-local/server.py), reached through its tunn3l address. It stands in for the
+// Realtime data channel: Talk.tsx sends it the same three events it sends OpenAI
+// (response.create with the text in <line> tags, response.cancel, output_audio_buffer.clear) and
+// gets back the same events it reads from OpenAI (speech started/stopped, the transcript, the
+// reply's audio started, done, stopped). So the turn-taking logic is one piece of code for both.
 //
-// Up: the microphone as 16 kHz mono int16 PCM. Down: JSON events, and binary frames of 24 kHz
-// int16 PCM (one sentence each) behind a 4-byte id, played back to back through Web Audio.
+// Plain HTTP, because the tunnel carries only whole requests and answers: the microphone goes up
+// as 16 kHz int16 PCM in ~250 ms posts, one after another, and each answer carries the events
+// since the last (Silero and the 800 ms pause run on the server). Each sentence of a reply is one
+// post that answers with its 24 kHz int16 PCM, played back to back through Web Audio. The token
+// sits in the query string and bodies are text/plain, so no request needs a preflight.
 
 export type VoiceEvent = { type: string; transcript?: string; response?: { id?: string; status?: string } }
 
@@ -32,19 +35,28 @@ class Down extends AudioWorkletProcessor {
 registerProcessor('kit-down', Down)
 `
 
+const CHUNK = 4096 // samples per microphone post: 256 ms
+// A sentence ends at . ! or ? followed by a space, so "3.5" stays whole.
+const sentences = (text: string) => text.split(/(?<=[.!?]["')\]]?)\s+/).filter((s) => s.trim())
+
+type ServerEvent = { type: string; text?: string }
+
 export class LocalVoice {
-  private ws: WebSocket | null = null
+  private call = ''
   private node: AudioWorkletNode | null = null
   private src: MediaStreamAudioSourceNode | null = null
+  private outbox: ArrayBuffer[] = []
+  private queued = 0
+  private wake: (() => void) | null = null
+  private open_ = false
   private playing = new Set<AudioBufferSourceNode>()
   private playhead = 0
   private nextId = 0
-  private live = new Map<number, string>() // readings asked for and not yet done: id -> text
-  private dead = 0 // ids up to this one were cancelled: their late audio is dropped
+  private reading = 0 // readings in progress
+  private dead = 0 // ids up to this one were cancelled: their audio is dropped
   private sounding = false
   private stoppedAt: number | null = null
   private endSilenceMs = 800
-  closedByUs = false
   // End of his speech to the first sound of the reply, per turn (read by talk-local-check.mjs).
   delays: number[] = []
 
@@ -57,97 +69,130 @@ export class LocalVoice {
     private onLost: () => void,
   ) {}
 
+  private at(path: string) {
+    return `${this.url}${path}?t=${encodeURIComponent(this.token)}`
+  }
+
   private emit(ev: VoiceEvent) {
     queueMicrotask(() => this.onEvent(ev))
   }
 
-  // Resolves when the Studio says it is ready; rejects if it cannot be reached in 8 s.
+  // Resolves when the Studio has opened a call; rejects if it cannot be reached in 8 s.
   async open(): Promise<void> {
+    const res = await fetch(this.at('/call'), { method: 'POST', signal: AbortSignal.timeout(8000) })
+    if (!res.ok) throw new Error(`voice server ${res.status}`)
+    const info = (await res.json()) as { call: string; end_silence_ms?: number }
+    this.call = info.call
+    if (info.end_silence_ms) this.endSilenceMs = info.end_silence_ms
     const blob = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }))
     await this.ctx.audioWorklet.addModule(blob)
     URL.revokeObjectURL(blob)
-    await new Promise<void>((resolve, reject) => {
-      const ws = new WebSocket(`${this.url}/ws?t=${encodeURIComponent(this.token)}`)
-      ws.binaryType = 'arraybuffer'
-      this.ws = ws
-      let ready = false
-      const timer = setTimeout(() => {
-        if (!ready) {
-          ws.close()
-          reject(new Error('unreachable'))
-        }
-      }, 8000)
-      ws.onmessage = (m) => {
-        if (typeof m.data !== 'string') return this.onAudio(m.data as ArrayBuffer)
-        const ev = JSON.parse(m.data) as { type: string; text?: string; id?: number; end_silence_ms?: number }
-        if (ev.type === 'ready') {
-          ready = true
-          clearTimeout(timer)
-          if (ev.end_silence_ms) this.endSilenceMs = ev.end_silence_ms
-          resolve()
-        } else this.onServer(ev)
-      }
-      ws.onerror = () => {
-        if (!ready) {
-          clearTimeout(timer)
-          reject(new Error('unreachable'))
-        }
-      }
-      ws.onclose = () => {
-        if (ready && !this.closedByUs) this.onLost()
-      }
-    })
     this.src = this.ctx.createMediaStreamSource(this.stream)
     this.node = new AudioWorkletNode(this.ctx, 'kit-down')
     this.node.port.onmessage = (m) => {
-      if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(m.data as ArrayBuffer)
+      this.outbox.push(m.data as ArrayBuffer)
+      this.queued += 512
+      if (this.queued >= CHUNK) this.wake?.()
     }
     this.src.connect(this.node)
     // A silent path to the speakers, so every browser keeps pulling the worklet.
     const mute = this.ctx.createGain()
     mute.gain.value = 0
     this.node.connect(mute).connect(this.ctx.destination)
+    this.open_ = true
+    void this.micLoop()
   }
 
-  private onServer(ev: { type: string; text?: string; id?: number }) {
-    switch (ev.type) {
-      case 'speech_started':
-        return this.emit({ type: 'input_audio_buffer.speech_started' })
-      case 'speech_stopped':
-        this.stoppedAt = performance.now()
-        return this.emit({ type: 'input_audio_buffer.speech_stopped' })
-      case 'transcript':
-        return this.emit({ type: 'conversation.item.input_audio_transcription.completed', transcript: ev.text ?? '' })
-      case 'speak_done': {
-        const id = ev.id ?? 0
-        const text = this.live.get(id)
-        this.live.delete(id)
-        if (id <= this.dead || text === undefined) return
-        this.emit({ type: 'response.output_audio_transcript.done', transcript: text })
-        this.emit({ type: 'response.done', response: { id: String(id), status: 'completed' } })
-        if (!this.playing.size) this.quiet()
-        return
+  // One microphone post at a time, in order: the server's VAD reads them as one stream.
+  private async micLoop() {
+    let fails = 0
+    while (this.open_) {
+      if (this.queued < CHUNK) await new Promise<void>((r) => (this.wake = r))
+      this.wake = null
+      if (!this.open_) return
+      const body = new Uint8Array(this.queued * 2)
+      let o = 0
+      for (const b of this.outbox) {
+        body.set(new Uint8Array(b), o)
+        o += b.byteLength
+      }
+      this.outbox = []
+      this.queued = 0
+      try {
+        const res = await fetch(this.at(`/call/${this.call}/audio`), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body,
+          signal: AbortSignal.timeout(5000),
+        })
+        if (res.status === 404 || res.status === 401) throw new Error('call gone')
+        if (!res.ok) throw new Error(`audio ${res.status}`)
+        fails = 0
+        for (const ev of ((await res.json()) as { events: ServerEvent[] }).events) this.onServer(ev)
+      } catch (e) {
+        if (!this.open_) return
+        if (++fails >= 3 || (e instanceof Error && e.message === 'call gone')) {
+          this.open_ = false
+          this.onLost()
+          return
+        }
       }
     }
   }
 
-  private onAudio(data: ArrayBuffer) {
-    const id = new DataView(data).getUint32(0, true)
-    if (id <= this.dead || data.byteLength <= 4) return
-    const pcm = new Int16Array(data, 4)
+  private onServer(ev: ServerEvent) {
+    if (ev.type === 'speech_started') this.emit({ type: 'input_audio_buffer.speech_started' })
+    else if (ev.type === 'speech_stopped') {
+      this.stoppedAt = performance.now()
+      this.emit({ type: 'input_audio_buffer.speech_stopped' })
+    } else if (ev.type === 'transcript')
+      this.emit({ type: 'conversation.item.input_audio_transcription.completed', transcript: ev.text ?? '' })
+  }
+
+  // Read `text` aloud one sentence per request, each played as soon as it arrives.
+  private async read(id: number, text: string) {
+    this.reading++
+    try {
+      for (const s of sentences(text)) {
+        if (id <= this.dead || !this.open_) return
+        const res = await fetch(this.at(`/call/${this.call}/speak`), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: s.trim(),
+          signal: AbortSignal.timeout(15000),
+        })
+        if (!res.ok) throw new Error(`speak ${res.status}`)
+        const pcm = await res.arrayBuffer()
+        if (id <= this.dead) return
+        this.play(pcm)
+      }
+    } catch (e) {
+      console.error('[talk] local voice could not read a sentence', e)
+    } finally {
+      this.reading--
+    }
+    if (id <= this.dead) return
+    this.emit({ type: 'response.output_audio_transcript.done', transcript: text })
+    this.emit({ type: 'response.done', response: { id: String(id), status: 'completed' } })
+    if (!this.playing.size) this.quiet()
+  }
+
+  private play(data: ArrayBuffer) {
+    if (data.byteLength < 2) return
+    const pcm = new Int16Array(data, 0, data.byteLength >> 1)
     const buf = this.ctx.createBuffer(1, pcm.length, 24000)
     const ch = buf.getChannelData(0)
     for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32768
     const node = this.ctx.createBufferSource()
     node.buffer = buf
     node.connect(this.ctx.destination)
-    const at = Math.max(this.ctx.currentTime + 0.02, this.playhead)
-    node.start(at)
-    this.playhead = at + buf.duration
+    const start = Math.max(this.ctx.currentTime + 0.02, this.playhead)
+    node.start(start)
+    this.playhead = start + buf.duration
     this.playing.add(node)
     node.onended = () => {
       this.playing.delete(node)
-      if (!this.playing.size && ![...this.live.keys()].some((k) => k > this.dead)) this.quiet()
+      if (!this.playing.size && !this.reading) this.quiet()
     }
     if (!this.sounding) {
       this.sounding = true
@@ -170,14 +215,11 @@ export class LocalVoice {
     const ev = event as { type: string; response?: { input?: { content?: { text?: string }[] }[] } }
     if (ev.type === 'response.create') {
       const raw = ev.response?.input?.[0]?.content?.[0]?.text ?? ''
-      const text = raw.replace(/^<line>|<\/line>$/g, '')
       const id = ++this.nextId
-      this.live.set(id, text)
-      this.ws?.send(JSON.stringify({ type: 'speak', id, text }))
       this.emit({ type: 'response.created', response: { id: String(id) } })
+      void this.read(id, raw.replace(/^<line>|<\/line>$/g, ''))
     } else if (ev.type === 'response.cancel') {
       this.dead = this.nextId
-      this.ws?.send(JSON.stringify({ type: 'cancel' }))
     } else if (ev.type === 'output_audio_buffer.clear') {
       this.dead = this.nextId
       for (const n of this.playing) {
@@ -196,11 +238,12 @@ export class LocalVoice {
   }
 
   close() {
-    this.closedByUs = true
     this.send({ type: 'output_audio_buffer.clear' })
+    const was = this.open_
+    this.open_ = false
+    this.wake?.()
     this.node?.disconnect()
     this.src?.disconnect()
-    this.ws?.close()
-    this.ws = null
+    if (was && this.call) void fetch(this.at(`/call/${this.call}/end`), { method: 'POST', keepalive: true }).catch(() => {})
   }
 }

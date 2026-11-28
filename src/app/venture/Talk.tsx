@@ -18,7 +18,7 @@ import { LocalVoice } from './local-voice'
 // While he is talking, no new piece goes to the voice.
 //
 // The "Local voice" switch (OLA-529, off by default, remembered on the device) swaps the ears
-// and the mouth for Kit's voice server on the Mac Studio over Tailscale (./local-voice.ts): the
+// and the mouth for Kit's voice server on the Mac Studio, through its tunn3l address (./local-voice.ts): the
 // same events both ways, the same replies from Claude. If the Studio cannot be reached the page
 // says so; it never falls back to the paid voice on its own.
 
@@ -29,7 +29,7 @@ type RtEvent = { type: string; transcript?: string; response?: { id?: string; st
 const STORE = 'venture.talk.session'
 const LOCAL = 'venture.talk.local'
 const UNREACHABLE =
-  'I cannot reach the voice on the Mac Studio. This device has to be on Tailscale, and the Studio awake. Turn Local voice off to use the regular voice.'
+  'I cannot reach the voice on the Mac Studio: it may be asleep or its tunnel down. Turn Local voice off to use the regular voice.'
 // Talking over Claude this long stops it.
 const BARGE_MS = 700
 
