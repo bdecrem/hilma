@@ -9,7 +9,7 @@ import { describeApproval, handoffPrompt, handoffWords, precheck, STRETCH_CHECKS
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
-import { deadAnswer, deadQuestion, isPokeFix, pokeAfter, pokeAgain, type Dead } from './poke.ts'
+import { deadAnswer, deadQuestion, isDeadHandoff, isHostedPokeFix, isPokeFix, pokeAfter, pokeAgain, pokeHosted, type Dead } from './poke.ts'
 import { answerFromWords, composerState, HELD, type ComposerState } from './composer.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
@@ -604,7 +604,20 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   let stopping: { turn: string; why: Stuck } | null = null
   function watchStretch() {
     const t = state.turns[state.turns.length - 1]
-    if (!t || t.engine === 'claude' || t.engine === 'hosted' || flagged.has(t.id) || t.at < loadedAt || state.suggestion) return
+    if (!t || flagged.has(t.id) || t.at < loadedAt || state.suggestion) return
+    // OLA-542: the bigger model's page after the card's Yes is pressed too: dead, one fix turn to it; still dead after that, the card with only OK.
+    if (t.status === 'done' && (isDeadHandoff(t) || isHostedPokeFix(t))) {
+      flagged.add(t.id)
+      const stillLast = () => state.turns[state.turns.length - 1]?.id === t.id && !busy() && !state.suggestion
+      void pokeHosted(t, {
+        poke: (since) => desk.poke(since, true),
+        send: (text) => runOn('hosted', text, { why: 'stuck', handoff: null, once: !isOn('hosted'), after: true }),
+        stillDead: (page, dead) => stillDead(t, page, dead, false),
+        stillLast,
+      })
+      return
+    }
+    if (t.engine === 'claude' || t.engine === 'hosted') return
     const running = t.status === 'working' || t.status === 'sending'
     const why = stuckReason(t)
     if (running) {
@@ -633,13 +646,13 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     stretch(reason, t.request, t.id)
   }
   /** OLA-522: the card after the second pressing, for the fix turn `t`: what still does not work, and the one question when it can be acted on. */
-  function stillDead(t: Turn, page: string, dead: Dead[]) {
-    // The person's request: the turn before the fix turns (one, or two when the page threw as it opened).
+  function stillDead(t: Turn, page: string, dead: Dead[], offer = true) {
+    // The person's request: the turn before the fix turns (one, or two when the page threw as it opened; OLA-542: and the bigger model's two).
     let i = state.turns.findIndex((x) => x.id === t.id) - 1
-    while (i > 0 && isPokeFix(state.turns[i])) i--
+    while (i > 0 && (isPokeFix(state.turns[i]) || isDeadHandoff(state.turns[i]) || isHostedPokeFix(state.turns[i]))) i--
     const request = (i >= 0 ? state.turns[i]?.request : '') ?? ''
-    const q = deadQuestion(page, dead, { hostedSetUp: isSetUp('hosted'), canSend: state.owner || isOn('hosted') })
-    setState('suggestion', { id: `s${Date.now()}`, request, turnId: t.id, reason: 'dead', offers: ['hosted'], target: 'hosted', canAct: q.offered, page: q.page, dead: q.dead })
+    const q = deadQuestion(page, dead, { hostedSetUp: offer && isSetUp('hosted'), canSend: state.owner || isOn('hosted') })
+    setState('suggestion', { id: `s${Date.now()}`, request, turnId: t.id, reason: 'dead', offers: ['hosted'], target: 'hosted', canAct: q.offered, page: q.page, dead: q.dead, ...(offer ? {} : { bigger: true }) })
     void desk.pokeNote({ event: 'asked', offered: q.offered, dead: dead.length })
   }
 

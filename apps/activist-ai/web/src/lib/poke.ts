@@ -118,6 +118,8 @@ export function deadLines(dead: string[]): string[] {
 
 /** The card's words (StretchCard, reason 'dead'). */
 export const DEAD_TITLE = 'Still not working after one fix:'
+/** OLA-542: the card after the bigger model's own fix. */
+export const DEAD_TITLE_BIGGER = 'Still not working after the bigger model’s fix:'
 export const deadOffer = (provider: string | null) =>
   `Try a bigger model? It runs outside this machine${provider ? ` (${provider})` : ''}.`
 
@@ -135,4 +137,45 @@ export const DEAD_HANDOFF_LINE = 'Ola gave this to a bigger model outside this m
 /** What the bigger model is asked: the person's request, the page and what does not work on it. */
 export function deadHandoffRequest(request: string, page: string, dead: string[]): string {
   return `${request}\n\nThe page for this is ${page}. Ola's own model built it and tried once to fix it; Ola then pressed its buttons and typed in its fields, and this still does not work:\n${dead.map((d) => `- ${d}`).join('\n')}\n\nFix exactly that in ${page}, check it, and hand it over.`
+}
+
+// ------------------------------------------------------------ the bigger model's page (OLA-542)
+//
+// OLA-466, checker Nov 28 (chk466j on 3573d325, chk466l on cb3fb944): after Yes on the card the hosted
+// model's spreadsheet had the row numbers over column A, so nothing could be typed in A, and Ola never
+// pressed that page. Two of three requests now succeed only through that hand-off. So its page is pressed
+// too: after the hand-off turn ends well, Ola presses the page once; something dead: one fix turn to the
+// same hosted model (POKE_LINE_HOSTED), under the person's same yes. After that fix, pressed once more;
+// still dead: the card says what does not work, with only "OK" (nothing bigger is left to offer). Never a
+// third turn. The pressing failing or timing out: nothing sent, nothing said.
+
+/** The line of the one fix turn Ola sends the bigger model about its own page. */
+export const POKE_LINE_HOSTED = 'Ola pressed the buttons on the bigger model’s page, found something that does not work, and asked the bigger model to fix it.'
+/** The bigger model's turn that took over after the card's Yes (deadAnswer's hand-off). */
+export const isDeadHandoff = (turn: Turn) => turn.engine === 'hosted' && !!turn.nudge && turn.request === DEAD_HANDOFF_LINE
+/** The bigger model's one fix turn about its own page. */
+export const isHostedPokeFix = (turn: Turn) => turn.engine === 'hosted' && !!turn.nudge && turn.request === POKE_LINE_HOSTED
+
+/**
+ * At the end of a bigger model's turn: after the hand-off, press its page and send one fix turn through
+ * `send` when something is dead; after that fix, press again and hand what is still dead to `stillDead`.
+ * Resolves whether either happened.
+ */
+export async function pokeHosted(
+  turn: Turn,
+  io: { poke: (since: number) => Promise<Poked>; send: (text: string) => unknown; stillDead: (page: string, dead: Dead[]) => unknown; stillLast: () => boolean },
+): Promise<boolean> {
+  const first = isDeadHandoff(turn)
+  if ((!first && !isHostedPokeFix(turn)) || turn.status !== 'done' || !(turn.at > 0)) return false
+  let r: Poked
+  try {
+    r = await io.poke(turn.at)
+  } catch {
+    return false
+  }
+  const dead = Array.isArray(r?.dead) ? r.dead.filter((d) => d && typeof d.say === 'string' && d.say) : []
+  if (typeof r?.page !== 'string' || !r.page || !dead.length || !io.stillLast()) return false
+  if (first) io.send(pokePrompt(r.page, dead, POKE_LINE_HOSTED))
+  else io.stillDead(r.page, dead)
+  return true
 }

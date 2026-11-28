@@ -2428,8 +2428,13 @@ same sentences (four at most) and, only when the hosted model is set up and this
 (the owner, or the project's switch on), asks "Give this to a bigger model? It runs outside this
 machine, at <provider>: …" with "Yes, give it to the bigger model" / "No"; otherwise only "OK". Yes:
 one hand-off turn to the hosted model (handoffPrompt, shown as "Ola gave this to a bigger model, which
-runs outside this machine, with the page and what does not work on it."), never pressed or asked
-again; No: nothing. The second pressing, the question and the answer each leave a front desk log line
+runs outside this machine, with the page and what does not work on it."); No: nothing. **The bigger
+model's page is pressed too** (OLA-542, from OLA-466's checker, Nov 28: twice its spreadsheet had the row
+numbers over column A and nobody pressed it): after the hand-off ends well its page is pressed once;
+dead: one fix turn to the same hosted model under the same yes ("Ola pressed the buttons on the bigger
+model's page, found something that does not work, and asked the bigger model to fix it."); after that,
+pressed once more; still dead: the card titled "Still not working after the bigger model's fix:" with
+only "OK". Never a third turn (`pokeHosted`, `web/test/poke-hosted.test.ts`). The second pressing, the question and the answer each leave a front desk log line
 (`frontdesk/poke.mjs`, `POST /api/poke/note`); the hand-off is the hosted run's own line. Tests
 `web/test/poke-again.test.ts`, `frontdesk/test/poke.test.mjs`.
 

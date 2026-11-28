@@ -277,6 +277,8 @@ export interface Suggestion {
   /** reason 'dead' (OLA-522): the page still dead after the one fix, and what on it does not work, in plain sentences. */
   page?: string
   dead?: string[]
+  /** OLA-542: the card comes after the bigger model's own fix (its title says so; nothing more is offered). */
+  bigger?: boolean
 }
 
 /** GET /api/claude: Fallback to Claude for this project. */

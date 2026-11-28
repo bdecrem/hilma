@@ -59,7 +59,7 @@ test('no hosted model set up (or this person cannot send it): the message withou
 
 const CARD = { canAct: true, request: 'make a to-do list', page: 'index.html', dead: ["Pressing 'Done' changed nothing on the page."] }
 
-test('yes: one hand-off turn with the page and the list, shown as one plain line, and it is never pressed or asked about again', async () => {
+test('yes: one hand-off turn with the page and the list, shown as one plain line, and Ola’s own model’s pressings leave it alone (OLA-542 presses it on its own path)', async () => {
   const a = deadAnswer(CARD, 'once', handoffPrompt)
   assert.equal(a.note, 'yes')
   const prompt = a.handoff!
@@ -69,7 +69,7 @@ test('yes: one hand-off turn with the page and the list, shown as one plain line
   const t = Object.assign(startTurn(st, prompt, 5), { engine: 'hosted' as const, status: 'done' as const })
   assert.equal(t.request, DEAD_HANDOFF_LINE)
   assert.match(DEAD_HANDOFF_LINE, /bigger model outside this machine/)
-  // The hosted model's turn: no first pressing, no second pressing.
+  // The hosted model's turn: not Ola's model's first or second pressing (pokeHosted, OLA-542, is its own).
   assert.equal(pokeable(t), false)
   assert.equal(isPokeFix(t), false)
   let pressed = 0

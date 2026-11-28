@@ -7,7 +7,7 @@
 import { createSignal, Show } from 'solid-js'
 import { fallbackPlace, type Ola } from '../lib/ola.ts'
 import { STRETCH_WHY } from '../lib/steps.ts'
-import { DEAD_TITLE, deadLines, deadOffer } from '../lib/poke.ts'
+import { DEAD_TITLE, DEAD_TITLE_BIGGER, deadLines, deadOffer } from '../lib/poke.ts'
 import type { Fallback } from '../lib/types.ts'
 import { CONSENT, ConsentDialog, hostedConsent } from './Settings.tsx'
 
@@ -34,7 +34,7 @@ export function StretchCard(props: { ola: Ola }) {
     return (
       <section class="stretch-card" aria-labelledby={`${id()}-title`} aria-describedby={`${id()}-why`}>
         <h3 id={`${id()}-title`} class="stretch-title">
-          {DEAD_TITLE}
+          {s().bigger ? DEAD_TITLE_BIGGER : DEAD_TITLE}
         </h3>
         <ul id={`${id()}-why`} class="stretch-why">
           {deadLines(s().dead ?? []).map((d) => (
