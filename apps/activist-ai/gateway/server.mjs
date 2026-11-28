@@ -954,7 +954,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
     }
     const wrong = fault(message, offered, schemas)
     // OLA-470: a reply cut off at the reply limit with nothing usable is not tried again unchanged.
-    if (cutUnusable(json.choices[0], wrong)) {
+    if (cutUnusable(json.choices[0], wrong, json.usage, Math.max(Number(body.max_tokens) || 0, Number(body.max_completion_tokens) || 0))) {
       tally.lengthCuts = (tally.lengthCuts || 0) + 1
       if (tally.lengthCuts > 1) return { status: 502, error: LENGTH_FAILED, why: 'the reply was cut off at the reply limit twice' }
       // Thinking low only for Ola's own model on this machine (the one measured, and the one whose

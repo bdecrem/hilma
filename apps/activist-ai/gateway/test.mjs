@@ -84,6 +84,11 @@ async function fakeUpstream() {
     // (nothing said, or a tool call whose arguments end mid-way), 'text' a cut reply with words,
     // anything else a whole reply; the last one repeated (OLA-470).
     const cut = cmd.cutSeq?.[Math.min(nth, cmd.cutSeq.length - 1)]
+    if (cut === 'fits') {
+      // a cut write whose arguments parse but miss a field, and a server that does not say "length"
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify({ id: 'x1', model: body.model, choices: [{ index: 0, message: { role: 'assistant', content: null, tool_calls: [{ id: 'c1', type: 'function', function: { name: 'write', arguments: '{"filePath":"index.html"}' } }] }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 15800 } }))
+    }
     if (cut === 'empty' || cut === 'call' || cut === 'text') {
       const m = cut === 'empty' ? { role: 'assistant', content: '' } : cut === 'text' ? { role: 'assistant', content: 'half a sentence' } : { role: 'assistant', content: null, tool_calls: [{ id: 'c1', type: 'function', function: { name: 'write', arguments: '{"filePath":"index.html","content":"<html><body><table' } }] }
       res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -2407,6 +2412,12 @@ test('a reply cut off at the reply limit gets one more try with the note, then f
     assert.match(JSON.stringify(r2.json), /too long/, 'worded so steps.ts counts it as a budget problem')
     assert.equal(up.st.seen.filter((x) => x.tag === 'cut2').length, 2, 'never a third try of a cut reply')
     await waitFor(() => g.logs().find((l) => l.length_cuts === 2), 3000, 'the log line counts both cuts')
+    // a cut write whose arguments parse but miss a field, at 95% of the allowance with no "length"
+    const r5 = await call(g, T.a, ask({ tag: 'cut5', cutSeq: ['fits', 'whole'] }))
+    assert.equal(r5.status, 200)
+    const t5 = up.st.seen.filter((x) => x.tag === 'cut5')
+    assert.equal(t5.length, 2, 'one more try, not the unchanged schema retry')
+    assert.ok(t5[1].system.includes('write it in parts'), 'with the note')
     // a cut reply that has words goes through as it is
     const r3 = await call(g, T.a, ask({ tag: 'cut3', cutSeq: ['text'] }))
     assert.equal(r3.status, 200)

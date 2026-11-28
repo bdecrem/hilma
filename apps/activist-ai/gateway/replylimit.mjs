@@ -4,8 +4,7 @@
 // code. Thinking Machines' advice for this model: limits on output tokens and turns. The limit
 // stays; what changes is what happens when a reply hits it.
 //
-// Before: an unusable cut reply (nothing said and no tool call, or a tool call whose arguments end
-// mid-way) was tried again unchanged, up to three times: the same three minutes three times over,
+// Before: an unusable cut reply (nothing said and no tool call, or a tool call cut mid-way) was tried again unchanged, up to three times: the same three minutes three times over,
 // and usually the same cut. Now:
 //   - one more try, never more, with LENGTH_NOTE in the instructions (think briefly, write a long
 //     file in parts), and for Ola's own model on our machine the thinking turned down to low for
@@ -19,10 +18,21 @@ export const LENGTH_NOTE = 'Note from Ola’s gateway: your last reply reached t
 
 export const LENGTH_FAILED = 'Ola’s model wrote a reply too long for the reply limit twice, so this step was stopped'
 
-/** Was this reply cut off at the reply limit with nothing usable in it? `wrong` is fault()'s answer. */
-export function cutUnusable(choice, wrong) {
-  if (choice?.finish_reason !== 'length') return false
-  return wrong === 'an empty reply' || wrong === 'tool arguments that are not JSON'
+/**
+ * Was this reply cut off at the reply limit with nothing usable in it? `wrong` is fault()'s answer,
+ * `maxTokens` the request's allowance. At the limit means finish_reason "length", or (a server that
+ * does not say so) 95% of the allowance used. Unusable: no words, or any tool call at all, whether
+ * its arguments fail to parse, miss the tool's fields, or happen to parse (the checker, Nov 28, on
+ * 9a95f3b7: three tries of about 15,700 tokens each against 16,000, args_retried and no length_cuts:
+ * a cut write whose arguments parsed but missed fields went to the old unchanged retry).
+ */
+export function cutUnusable(choice, wrong, usage = null, maxTokens = 0) {
+  const out = Number(usage?.completion_tokens) || 0
+  const atLimit = choice?.finish_reason === 'length' || (maxTokens > 0 && out >= 0.95 * maxTokens)
+  if (!atLimit) return false
+  const m = choice?.message || {}
+  if ((m.tool_calls || []).length) return true
+  return wrong === 'an empty reply'
 }
 
 /** The request for the one more try: the note in the instructions, and with `effort` thinking low. */
