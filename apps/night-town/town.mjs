@@ -367,7 +367,7 @@ function report() {
   const ex = (j) => `- r${j.round} "${j.name}" (${j.kind}), ${j.minutes} min, ${j.steps} steps${j.failure ? `, ${j.failure}` : ''}. Qwen asked: "${j.what.replace(/\s+/g, ' ').slice(0, 300)}" Check: \`${j.check.replace(/\s+/g, ' ').slice(0, 160)}\`${j.failure ? ` Judge: ${(j.judge || []).slice(-1)[0]?.slice(0, 200) || ''}` : ''}`
   const rate = kinds.map((k) => { const a = js.filter((j) => j.kind === k); return { k, n: a.length, kept: a.filter((j) => j.verdict === 'kept').length } }).sort((a, b) => pct(b.kept, b.n) - pct(a.kept, a.n))
   const good = rate.filter((r) => r.n >= 2 && pct(r.kept, r.n) >= 50), bad = rate.filter((r) => r.n >= 2 && pct(r.kept, r.n) < 50)
-  const ok = rounds.filter((r) => r.minutes), total = ok.reduce((a, r) => a + r.minutes, 0), swaps = ok.reduce((a, r) => a + (r.swapIn || 0) + (r.swapOut || 0), 0) / 60
+  const ok = rounds.filter((r) => r.minutes && r.built), total = ok.reduce((a, r) => a + r.minutes, 0), swaps = ok.reduce((a, r) => a + (r.swapIn || 0) + (r.swapOut || 0), 0) / 60
   const third = Math.max(1, Math.ceil(rounds.length / 3))
   const phase = (rs) => { const ids = new Set(rs.map((r) => r.round)); const a = js.filter((j) => ids.has(j.round)); return a.length ? `${a.length} jobs, ${pct(a.filter((j) => j.verdict === 'kept').length, a.length)}% kept, kinds ${JSON.stringify(by(a, 'kind'))}, asks averaged ${Math.round(a.reduce((s, j) => s + j.what.length, 0) / a.length)} characters, checks ${Math.round(a.reduce((s, j) => s + j.check.length, 0) / a.length)}` : 'no jobs' }
   const failures = by(rej, 'failure')
@@ -405,7 +405,7 @@ ${rej.filter((j) => j.failure !== 'did not finish in time').slice(-2).map(ex).jo
 
 ## Time
 
-${ok.length} rounds averaged ${(total / (ok.length || 1)).toFixed(1)} min; swapping models took ${swaps.toFixed(0)} of ${total.toFixed(0)} min (${pct(swaps, total)}%). A job took ${(js.reduce((a, j) => a + j.minutes, 0) / (js.length || 1)).toFixed(1)} min on average (kept ${(kept.reduce((a, j) => a + j.minutes, 0) / (kept.length || 1)).toFixed(1)}, rejected ${(rej.reduce((a, j) => a + j.minutes, 0) / (rej.length || 1)).toFixed(1)}).
+${ok.length} rounds that built something averaged ${(total / (ok.length || 1)).toFixed(1)} min; swapping models took ${swaps.toFixed(0)} of ${total.toFixed(0)} min (${pct(swaps, total)}%). A job took ${(js.reduce((a, j) => a + j.minutes, 0) / (js.length || 1)).toFixed(1)} min on average (kept ${(kept.reduce((a, j) => a + j.minutes, 0) / (kept.length || 1)).toFixed(1)}, rejected ${(rej.reduce((a, j) => a + j.minutes, 0) / (rej.length || 1)).toFixed(1)}).
 
 ## Three plain lessons for the factory
 
